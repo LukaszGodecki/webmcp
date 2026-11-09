@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.app-header {
+  padding: 20px 16px;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  text-align: center;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-medium);
+  }
+
+  p {
+    margin: 4px 0 0;
+    font: var(--mat-sys-body-large);
+  }
+}

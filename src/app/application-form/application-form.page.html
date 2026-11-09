@@ -1,0 +1,134 @@
+<div class="layout">
+  <div class="main">
+    <mat-card appearance="outlined" class="form-card">
+      <mat-card-header>
+        <mat-card-title><h2 id="form-title">Formularz zgłoszeniowy</h2></mat-card-title>
+        <mat-card-subtitle>
+          Wypełnij ręcznie albo poproś agenta AI – formularz jest dostępny przez WebMCP.
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formRoot]="form" aria-labelledby="form-title">
+          <section aria-labelledby="personal-title">
+            <h3 id="personal-title">Dane osobowe</h3>
+            <div class="grid">
+              <mat-form-field [class.agent-filled]="isHighlighted('firstName')">
+                <mat-label>Imię</mat-label>
+                <input matInput [formField]="form.firstName" autocomplete="given-name" />
+                @if (form.firstName().errors()[0]; as error) {
+                  <mat-error>{{ error.message }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field [class.agent-filled]="isHighlighted('lastName')">
+                <mat-label>Nazwisko</mat-label>
+                <input matInput [formField]="form.lastName" autocomplete="family-name" />
+                @if (form.lastName().errors()[0]; as error) {
+                  <mat-error>{{ error.message }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field [class.agent-filled]="isHighlighted('birthDate')">
+                <mat-label>Data urodzenia</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="birthPicker"
+                  [formField]="form.birthDate"
+                  autocomplete="bday"
+                />
+                <mat-hint>DD.MM.RRRR</mat-hint>
+                <mat-datepicker-toggle matIconSuffix [for]="birthPicker" />
+                <mat-datepicker #birthPicker startView="multi-year" />
+                @if (form.birthDate().errors()[0]; as error) {
+                  <mat-error>{{ error.message }}</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </section>
+
+          <section aria-labelledby="address-title">
+            <h3 id="address-title">Adres zamieszkania</h3>
+            <div class="grid">
+              <mat-form-field [class.agent-filled]="isHighlighted('street')">
+                <mat-label>Ulica i numer</mat-label>
+                <input matInput [formField]="form.street" autocomplete="street-address" />
+                @if (form.street().errors()[0]; as error) {
+                  <mat-error>{{ error.message }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field [class.agent-filled]="isHighlighted('city')">
+                <mat-label>Miasto</mat-label>
+                <input matInput [formField]="form.city" autocomplete="address-level2" />
+                @if (form.city().errors()[0]; as error) {
+                  <mat-error>{{ error.message }}</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </section>
+
+          <section aria-labelledby="experience-title">
+            <h3 id="experience-title">Doświadczenie zawodowe</h3>
+            <div class="experience-list">
+              @for (item of form.experience; track $index) {
+                <app-experience-item
+                  [item]="item"
+                  [index]="$index"
+                  (remove)="removeExperience($index)"
+                />
+              }
+            </div>
+            <button matButton="tonal" type="button" (click)="addExperience()">
+              <mat-icon aria-hidden="true">add</mat-icon>
+              Dodaj doświadczenie
+            </button>
+          </section>
+
+          <div class="actions">
+            <button matButton="text" type="button" (click)="clear()">Wyczyść</button>
+            <button matButton="filled" type="submit" [disabled]="form().submitting()">
+              Wyślij zgłoszenie
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    @if (submitted(); as submission) {
+      <mat-card appearance="outlined" class="summary" role="status">
+        <mat-card-header>
+          <mat-icon mat-card-avatar aria-hidden="true">task_alt</mat-icon>
+          <mat-card-title><h2>Zgłoszenie wysłane</h2></mat-card-title>
+          <mat-card-subtitle>
+            {{ submission.at | date: 'HH:mm:ss' }} ·
+            {{ submission.viaAgent ? 'wysłane przez agenta AI (WebMCP)' : 'wysłane ręcznie' }}
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <dl>
+            <dt>Imię i nazwisko</dt>
+            <dd>{{ submission.value.firstName }} {{ submission.value.lastName }}</dd>
+            <dt>Data urodzenia</dt>
+            <dd>{{ submission.value.birthDate | date: 'dd.MM.yyyy' }}</dd>
+            <dt>Adres</dt>
+            <dd>{{ submission.value.street }}, {{ submission.value.city }}</dd>
+            <dt>Doświadczenie</dt>
+            <dd>
+              <ul>
+                @for (exp of submission.value.experience; track $index) {
+                  <li>
+                    {{ exp.position }} ({{ exp.from | date: 'dd.MM.yyyy' }} –
+                    {{ exp.to | date: 'dd.MM.yyyy' }})
+                  </li>
+                }
+              </ul>
+            </dd>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <app-webmcp-panel class="panel" />
+</div>
