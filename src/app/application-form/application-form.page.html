@@ -87,7 +87,12 @@
 
           <div class="actions">
             <button matButton="text" type="button" (click)="clear()">Wyczyść</button>
-            <button matButton="filled" type="submit" [disabled]="form().submitting()">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="form().submitting()"
+              (click)="markManualSubmit()"
+            >
               Wyślij zgłoszenie
             </button>
           </div>

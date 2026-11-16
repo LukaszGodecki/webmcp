@@ -52,6 +52,12 @@ export class ApplicationFormPage {
   protected readonly submitted = signal<Submission | null>(null);
 
   /**
+   * Set when the user clicks the submit button (pressing Enter in a field triggers a synthetic
+   * click on it too). The agent's generated tool calls `submit()` directly, without a click.
+   */
+  private manualSubmit = false;
+
+  /**
    * `experimentalWebMcpTool` turns the whole form into a WebMCP tool: Angular infers the
    * JSON schema from the model, and on invocation sets the value and calls `submit()`.
    */
@@ -112,6 +118,13 @@ export class ApplicationFormPage {
     }));
   }
 
+  protected markManualSubmit(): void {
+    this.manualSubmit = true;
+    // The submit event (and the submission action) runs synchronously after the click, so
+    // reset on the next task in case the submission was skipped (e.g. already submitting).
+    setTimeout(() => (this.manualSubmit = false));
+  }
+
   protected clear(): void {
     this.form().reset(initialValue());
     this.submitted.set(null);
@@ -123,7 +136,8 @@ export class ApplicationFormPage {
     status: 'success' | 'error',
     result: string,
   ): boolean {
-    const viaAgent = this.activity.consumeActivation(SUBMIT_TOOL.name);
+    const viaAgent = !this.manualSubmit;
+    this.manualSubmit = false;
     if (viaAgent) {
       const id = this.activity.start(SUBMIT_TOOL.name, value);
       this.activity.finish(id, status, result);

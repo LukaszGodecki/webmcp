@@ -21,8 +21,6 @@ export interface WebMcpLogEntry {
 
 const MAX_LOG_ENTRIES = 50;
 const HIGHLIGHT_MS = 2500;
-/** How long after a `toolactivated` event a form submission is attributed to the agent. */
-const ACTIVATION_WINDOW_MS = 2000;
 
 /**
  * Demo-only bookkeeping for WebMCP: which tools this page exposes, what the agent called
@@ -69,17 +67,11 @@ export class WebMcpActivityService {
 
   private nextId = 1;
   private highlightTimer: ReturnType<typeof setTimeout> | undefined;
-  private lastActivation: { tool: string; at: number } | undefined;
 
   constructor() {
-    const onActivated = (event: ToolActivatedEvent) => {
-      this.lastActivation = { tool: event.toolName, at: performance.now() };
-    };
     const onToolChange = () => void this.refreshConfirmed();
-    this.modelContext?.addEventListener('toolactivated', onActivated);
     this.modelContext?.addEventListener('toolchange', onToolChange);
     inject(DestroyRef).onDestroy(() => {
-      this.modelContext?.removeEventListener('toolactivated', onActivated);
       this.modelContext?.removeEventListener('toolchange', onToolChange);
       clearTimeout(this.highlightTimer);
     });
@@ -113,17 +105,6 @@ export class WebMcpActivityService {
 
   removeTool(name: string): void {
     this.toolsState.update((tools) => tools.filter((t) => t.name !== name));
-  }
-
-  /** Returns `true` if the agent has just activated the given tool (consumes the activation). */
-  consumeActivation(tool: string): boolean {
-    const activation = this.lastActivation;
-    const recent =
-      activation?.tool === tool && performance.now() - activation.at < ACTIVATION_WINDOW_MS;
-    if (recent) {
-      this.lastActivation = undefined;
-    }
-    return recent;
   }
 
   start(tool: string, args: unknown, source: WebMcpLogEntry['source'] = 'agent'): number {
